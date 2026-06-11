@@ -52,6 +52,26 @@ Rules:
 - Output ONLY the reformatted text. No preamble. No explanation.""",
 }
 
+PROFILE_PROMPTS = {
+    "dyslexia": """
+    Use simple words.
+    Keep sentences short.
+    Avoid difficult vocabulary.
+    """,
+
+    "adhd": """
+    Use short chunks.
+    Use bullet points when useful.
+    Highlight important ideas.
+    """,
+
+    "autism": """
+    Use direct language.
+    Avoid metaphors.
+    Explain things step by step.
+    """
+}
+
 # ─── OpenAI Client ─────────────────────────────────────────────────────────────
 
 def _get_client() -> AsyncOpenAI:
@@ -64,6 +84,7 @@ def _get_client() -> AsyncOpenAI:
 async def simplify_text(
     text: str,
     level: Literal["beginner", "intermediate", "advanced"] = "intermediate",
+    diagnosis_type: str = "",
 ) -> str:
     """Call GPT-4o to simplify text at the given reading level."""
     if not settings.OPENAI_API_KEY:
@@ -72,6 +93,13 @@ async def simplify_text(
 
     client = _get_client()
     system_prompt = SYSTEM_PROMPTS.get(level, SYSTEM_PROMPTS["intermediate"])
+
+    if diagnosis_type:
+        profile_prompt = PROFILE_PROMPTS.get(
+        diagnosis_type.lower(),
+        ""
+        )
+        system_prompt += "\n\n" + profile_prompt
 
     response = await client.chat.completions.create(
         model=settings.OPENAI_MODEL,
@@ -142,6 +170,7 @@ async def process_content_into_chunks(
     raw_text: str,
     reading_level: Literal["beginner", "intermediate", "advanced"],
     chunk_word_limit: int,
+    diagnosis_type: str = "",
 ) -> List[ContentChunk]:
     """
     Full pipeline:
@@ -156,7 +185,11 @@ async def process_content_into_chunks(
 
     for idx, chunk_text in enumerate(raw_chunks):
         try:
-            simplified = await simplify_text(chunk_text, level=reading_level)
+            simplified = await simplify_text(
+            chunk_text,
+            level=reading_level,
+            diagnosis_type=diagnosis_type
+)
         except Exception as e:
             logger.error(f"Simplification failed for chunk {idx}: {e}")
             simplified = chunk_text  # Graceful fallback to original
