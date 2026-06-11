@@ -39,23 +39,27 @@ async def create_session(
     profile_doc = await db.cognitive_profiles.find_one({"user_id": user_id})
     if profile_doc:
         profile = CognitiveProfileResponse.from_mongo(profile_doc)
+
         chunk_word_limit = profile.chunk_word_limit
         reading_level = profile.reading_level
+        diagnosis_type = profile.diagnosis_type
+
     else:
-        # Sensible defaults for users without a profile
         chunk_word_limit = 100
         reading_level = "intermediate"
+        diagnosis_type = ""
 
     session_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
 
     # Process text with AI pipeline
     chunks = await process_content_into_chunks(
-        session_id=session_id,
-        raw_text=payload.text,
-        reading_level=reading_level,
-        chunk_word_limit=chunk_word_limit,
-    )
+    session_id=session_id,
+    raw_text=payload.text,
+    reading_level=reading_level,
+    chunk_word_limit=chunk_word_limit,
+    diagnosis_type=diagnosis_type,
+)
 
     doc = {
         "_id": session_id,
