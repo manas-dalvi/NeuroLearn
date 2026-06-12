@@ -7,7 +7,7 @@ import {
 } from "./mockData";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true" || true; // Always on until backend is configured
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 // ─── Demo delay helper ───────────────────────────────────────────────────────
 const delay = (ms = 600) => new Promise((r) => setTimeout(r, ms));
