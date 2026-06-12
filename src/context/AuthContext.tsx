@@ -19,7 +19,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-const DEMO_MODE = true; // Set to false and configure Firebase for production
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
 // ─── Demo Auth (no Firebase required) ────────────────────────────────────────
 const DEMO_TOKEN = "demo-jwt-token-nlap-2025";
