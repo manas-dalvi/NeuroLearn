@@ -1,3 +1,4 @@
+print("🚀 NEW AI_SERVICE FILE LOADED")
 ## backend/app/services/ai_service.py
 """
 NLAP AI Service — Core intelligence layer
@@ -75,7 +76,10 @@ PROFILE_PROMPTS = {
 # ─── OpenAI Client ─────────────────────────────────────────────────────────────
 
 def _get_client() -> AsyncOpenAI:
-    return AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+    return AsyncOpenAI(
+        api_key=settings.GROQ_API_KEY,
+        base_url="https://api.groq.com/openai/v1"
+    )
 
 
 # ─── Simplification Engine ─────────────────────────────────────────────────────
@@ -87,8 +91,8 @@ async def simplify_text(
     diagnosis_type: str = "",
 ) -> str:
     """Call GPT-4o to simplify text at the given reading level."""
-    if not settings.OPENAI_API_KEY:
-        logger.warning("OpenAI API key not set — returning original text")
+    if not settings.GROQ_API_KEY:
+        logger.warning("Groq API key not set — returning original text")
         return text
 
     client = _get_client()
@@ -102,7 +106,7 @@ async def simplify_text(
         system_prompt += "\n\n" + profile_prompt
 
     response = await client.chat.completions.create(
-        model=settings.OPENAI_MODEL,
+        model=settings.GROQ_MODEL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Text to simplify:\n\n{text}"},
@@ -112,6 +116,10 @@ async def simplify_text(
     )
 
     result = response.choices[0].message.content or text
+
+    print("GROQ RESPONSE:")
+    print(result)
+
     return result.strip()
 
 
