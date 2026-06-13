@@ -262,9 +262,15 @@ export default function Dashboard() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {sessions.slice(0, 7).map((s: LearningSession) => {
                   const pct =
-                    s.chunks.length > 0
-                      ? Math.round((s.completed_chunks / s.chunks.length) * 100)
-                      : s.completed_chunks > 0 ? 80 : 0;
+                      s.chunks.length > 0
+                        ? Math.round(
+                            (Math.min(s.completed_chunks, s.chunks.length) /
+                              s.chunks.length) *
+                              100
+                          )
+                        : s.completed_chunks > 0
+                          ? 80
+                          : 0;
                   return (
                     <motion.button
                       key={s.id}
