@@ -2,7 +2,6 @@
 version: "3.9"
 
 services:
-  # ── MongoDB ────────────────────────────────────────────────────────────────
   mongo:
     image: mongo:7.0
     container_name: nlap_mongo
@@ -21,7 +20,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Redis ──────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: nlap_redis
@@ -37,11 +35,12 @@ services:
       timeout: 3s
       retries: 5
 
-  # ── FastAPI Backend ────────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    env_file:
+      - .env
     container_name: nlap_backend
     restart: unless-stopped
     ports:
@@ -52,11 +51,13 @@ services:
       REDIS_URL: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: gpt-4o
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       GOOGLE_APPLICATION_CREDENTIALS: /secrets/firebase.json
-      ALLOWED_ORIGINS: "http://localhost:3000"
+      ALLOWED_ORIGINS: '["http://localhost:3000"]'
     volumes:
-      - ./firebase-service-account.json:/secrets/firebase.json:ro
+      - ./firebase.json:/secrets/firebase.json:ro
     depends_on:
       mongo:
         condition: service_healthy
@@ -68,20 +69,23 @@ services:
       timeout: 10s
       retries: 3
 
-  # ── Next.js Frontend ───────────────────────────────────────────────────────
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
+
+    env_file:
+      - .env.local
+
     container_name: nlap_frontend
     restart: unless-stopped
+
     ports:
       - "3000:3000"
+
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_FIREBASE_API_KEY: ${FIREBASE_API_KEY}
-      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${FIREBASE_AUTH_DOMAIN}
-      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+
     depends_on:
       backend:
         condition: service_healthy
