@@ -8,7 +8,11 @@ class Settings(BaseSettings):
     APP_NAME: str = "NLAP Backend API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "https://your-production-domain.com"]
+    ALLOWED_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://your-production-domain.com"
+    ]
 
     # MongoDB
     MONGODB_URL: str = "mongodb://localhost:27017"
@@ -22,6 +26,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o"
     OPENAI_MAX_TOKENS: int = 2048
+
+    # Groq
+    GROQ_API_KEY: str = ""
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
