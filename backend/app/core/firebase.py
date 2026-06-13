@@ -22,9 +22,13 @@ def _get_firebase_app() -> firebase_admin.App:
             cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
         else:
             cred = credentials.ApplicationDefault()
-
         if not firebase_admin._apps:
-            app = firebase_admin.initialize_app(cred, {"projectId": settings.FIREBASE_PROJECT_ID})
+            logger.info(f"FIREBASE_PROJECT_ID = {settings.FIREBASE_PROJECT_ID}")
+
+            app = firebase_admin.initialize_app(
+            cred,
+        {"projectId": settings.FIREBASE_PROJECT_ID}
+    )
         else:
             app = firebase_admin.get_app()
 
@@ -40,9 +44,11 @@ async def get_current_user_id(
 ) -> str:
     """Verify Firebase JWT and return the user's UID."""
     token = credentials.credentials
+    print("TOKEN RECEIVED:", token[:30])
     try:
         _get_firebase_app()
         decoded = auth.verify_id_token(token)
+        print("DECODED UID:", decoded["uid"])
         return decoded["uid"]
     except firebase_admin.auth.ExpiredIdTokenError:
         raise HTTPException(
@@ -55,6 +61,7 @@ async def get_current_user_id(
             detail="Invalid authentication token.",
         )
     except Exception as e:
+        print("FULL AUTH ERROR:", str(e))
         logger.error(f"Auth verification error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
