@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, CheckCircle, Loader2, Sparkles, BookOpen, BarChart2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +19,7 @@ const LEVEL_COLORS: Record<string, string> = {
 };
 
 export default function FocusModeViewer({ sessionId, chunkWordLimit = 100 }: Props) {
+  const router = useRouter();
   const { token } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
@@ -37,12 +39,38 @@ export default function FocusModeViewer({ sessionId, chunkWordLimit = 100 }: Pro
   const chunks = data?.chunks ?? [];
   const chunk = chunks[currentIndex];
 
-  const markComplete = useCallback(() => {
+  const markComplete = useCallback(async () => {
+    const completedCount = Math.min(
+    currentIndex + 1,
+    chunks.length
+  );
+
+    try {
+      await api.updateSession(
+        token ?? "demo",
+        sessionId,
+        {
+          completed_chunks: completedCount,
+        }
+      );
+    } catch (err) {
+      console.error("UPDATE SESSION ERROR", err);
+    } 
+
     setCompleted((prev) => new Set([...prev, currentIndex]));
     if (currentIndex < chunks.length - 1) {
       setCurrentIndex((i) => i + 1);
+    } else {
+      console.log("REDIRECTING...");
+      router.push("/dashboard");
     }
-  }, [currentIndex, chunks.length]);
+    }, [
+      currentIndex,
+      chunks.length,
+      token,
+      sessionId,
+      router
+    ]);
 
   const progressPct = chunks.length > 0 ? (completed.size / chunks.length) * 100 : 0;
 
