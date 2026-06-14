@@ -55,21 +55,32 @@ Rules:
 
 PROFILE_PROMPTS = {
     "dyslexia": """
-    Use simple words.
-    Keep sentences short.
-    Avoid difficult vocabulary.
+    DIAGNOSIS ADAPTATION RULES (DYSLEXIA):
+    - You MUST use very short, direct sentences (maximum 8-10 words per sentence).
+    - You MUST replace all complex, multi-syllabic, or rare vocabulary with simple, everyday words.
+    - You MUST avoid paragraphs longer than 2 sentences. Double-space between paragraphs.
+    - You MUST structure sentences simply (Subject-Verb-Object) to minimize visual decoding effort.
     """,
 
     "adhd": """
-    Use short chunks.
-    Use bullet points when useful.
-    Highlight important ideas.
+    ADHD FORMAT RULES (MANDATORY):
+
+    - Output MUST be bullet points.
+    - Do NOT write paragraphs.
+    - Each bullet MUST be under 10 words.
+    - Put the most important idea first.
+    - Highlight important terms using **bold**.
+    - Break information into small chunks.
+    - Use maximum 5 bullets.
     """,
 
     "autism": """
-    Use direct language.
-    Avoid metaphors.
-    Explain things step by step.
+    DIAGNOSIS ADAPTATION RULES (AUTISM):
+    - You MUST present information in step-by-step numbered instructions.
+    - You MUST use strictly literal and direct language.
+    - You MUST avoid metaphors and figurative language.
+    - You MUST use explicit logical transitions.
+    - You MUST maintain a predictable structure.
     """
 }
 
@@ -119,7 +130,8 @@ async def simplify_text(
 
     print("GROQ RESPONSE:")
     print(result)
-
+    print("DIAGNOSIS =", diagnosis_type)
+    print("LEVEL =", level)
     return result.strip()
 
 
