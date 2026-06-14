@@ -230,4 +230,3 @@ export type ChunksResponse = { chunks: ContentChunk[] };
 export type SimplifyPayload = { text: string; level: "beginner" | "intermediate" | "advanced" };
 export type SimplifyResponse = { simplified: string };
 export type CreateSessionPayload = { content_title: string; text: string };
-
