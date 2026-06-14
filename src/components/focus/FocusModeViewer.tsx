@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, CheckCircle, Loader2, Sparkles, BookOpen, BarChart2 } from "lucide-react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { api, ContentChunk } from "@/lib/api";
 
@@ -21,6 +21,7 @@ const LEVEL_COLORS: Record<string, string> = {
 export default function FocusModeViewer({ sessionId, chunkWordLimit = 100 }: Props) {
   const router = useRouter();
   const { token } = useAuth();
+  const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [showSimplified, setShowSimplified] = useState(true);
@@ -33,7 +34,35 @@ export default function FocusModeViewer({ sessionId, chunkWordLimit = 100 }: Pro
 
   const simplifyMutation = useMutation({
     mutationFn: (chunk: ContentChunk) =>
-      api.simplifyChunk(token ?? "demo", { text: chunk.original_text, level: chunk.level as "beginner" | "intermediate" | "advanced" }),
+      api.simplifyChunk(token ?? "demo", {
+        text: chunk.original_text,
+        level: chunk.level as
+          | "beginner"
+          | "intermediate"
+          | "advanced",
+      }),
+
+    onSuccess: (res) => {
+      queryClient.setQueryData(
+        ["chunks", sessionId],
+        (old: any) => {
+          if (!old) return old;
+
+          return {
+            ...old,
+            chunks: old.chunks.map(
+              (c: ContentChunk, idx: number) =>
+                idx === currentIndex
+                  ? {
+                      ...c,
+                      simplified_text: res.simplified,
+                    }
+                  : c
+            ),
+          };
+        }
+      );
+    },
   });
 
   const chunks = data?.chunks ?? [];
