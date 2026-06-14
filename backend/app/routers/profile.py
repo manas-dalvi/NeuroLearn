@@ -98,4 +98,3 @@ async def update_profile(
     await cache_delete(_profile_cache_key(user_id))
     await cache_set(_profile_cache_key(user_id), profile.model_dump(mode="json"))
     return profile
-
