@@ -147,6 +147,21 @@ async def simplify_chunk(
     user_id: str = Depends(get_current_user_id),
 ):
     """Re-simplify a chunk of text at a given level."""
-    simplified = await simplify_text(payload.text, level=payload.level)  # type: ignore
-    return SimplifyResponse(simplified=simplified)
+    db = get_db()
 
+    profile_doc = await db.cognitive_profiles.find_one(
+        {"user_id": user_id}
+    )
+
+    diagnosis_type = ""
+
+    if profile_doc:
+        profile = CognitiveProfileResponse.from_mongo(profile_doc)
+        diagnosis_type = profile.diagnosis_type
+
+    simplified = await simplify_text(
+        payload.text,
+        level=payload.level,
+        diagnosis_type=diagnosis_type,
+    )
+    return SimplifyResponse(simplified=simplified)
