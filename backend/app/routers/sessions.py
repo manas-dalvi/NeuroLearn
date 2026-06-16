@@ -3,7 +3,17 @@ from datetime import datetime, timezone
 from typing import List
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import pypdf
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+    File,
+    UploadFile,
+    Form,
+)
 
 from ..core.database import get_db
 from ..core.firebase import get_current_user_id
@@ -165,3 +175,82 @@ async def simplify_chunk(
         diagnosis_type=diagnosis_type,
     )
     return SimplifyResponse(simplified=simplified)
+
+@router.post(
+    "/sessions/upload-pdf",
+    response_model=LearningSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_pdf(
+    content_title: str = Form(...),
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user_id),
+):
+    db = get_db()
+
+    profile_doc = await db.cognitive_profiles.find_one(
+        {"user_id": user_id}
+    )
+
+    if profile_doc:
+        profile = CognitiveProfileResponse.from_mongo(profile_doc)
+
+        chunk_word_limit = profile.chunk_word_limit
+        reading_level = profile.reading_level
+        diagnosis_type = profile.diagnosis_type
+    else:
+        chunk_word_limit = 100
+        reading_level = "intermediate"
+        diagnosis_type = ""
+
+    try:
+        pdf_bytes = await file.read()
+
+        from io import BytesIO
+
+        pdf_reader = pypdf.PdfReader(BytesIO(pdf_bytes))
+
+        extracted_text = ""
+
+        for page in pdf_reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                extracted_text += page_text + "\n"
+
+        if not extracted_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract text from PDF",
+            )
+
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid PDF file",
+        )
+
+    session_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+
+    chunks = await process_content_into_chunks(
+        session_id=session_id,
+        raw_text=extracted_text,
+        reading_level=reading_level,
+        chunk_word_limit=chunk_word_limit,
+        diagnosis_type=diagnosis_type,
+    )
+
+    doc = {
+        "_id": session_id,
+        "user_id": user_id,
+        "content_title": content_title,
+        "chunks": [c.model_dump() for c in chunks],
+        "total_focus_minutes": 0,
+        "completed_chunks": 0,
+        "started_at": now,
+        "ended_at": None,
+    }
+
+    await db.learning_sessions.insert_one(doc)
+
+    return LearningSessionResponse.from_mongo(doc)
