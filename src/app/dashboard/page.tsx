@@ -52,6 +52,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [uploadText, setUploadText] = useState("");
   const [uploadTitle, setUploadTitle] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [showDemoBanner, setShowDemoBanner] = useState(true);
 
   // Redirect if not logged in
@@ -74,6 +75,16 @@ export default function Dashboard() {
     },
   });
 
+  const uploadPdfMutation = useMutation({
+    mutationFn: (data: { content_title: string; file: File }) =>
+      api.uploadPdf(token ?? "demo", data.file, data.content_title),
+
+    onSuccess: (session: LearningSession) => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      router.push(`/focus?session=${session.id}`);
+    },
+  });
+  
   const totalFocusMinutes = sessions.reduce((acc: number, s: LearningSession) => acc + s.total_focus_minutes, 0);
   const totalChunks = sessions.reduce((acc: number, s: LearningSession) => acc + s.completed_chunks, 0);
   const avgCompletion =
@@ -189,9 +200,51 @@ export default function Dashboard() {
                 placeholder="Paste your text here. The AI will break it into personalized chunks based on your focus profile…"
                 value={uploadText}
                 onChange={(e) => setUploadText(e.target.value)}
+                disabled={!!pdfFile}
                 rows={9}
                 style={{ resize: "vertical" }}
               />
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  marginTop: 12,
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                  }}
+                >
+                  Or Upload PDF
+                </label>
+
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setPdfFile(file);
+
+                    if (file && !uploadTitle.trim()) {
+                      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                      setUploadTitle(nameWithoutExt);
+                    }
+                  }}
+                />
+
+                {pdfFile && (
+                  <button
+                    type="button"
+                    onClick={() => setPdfFile(null)}
+                  >
+                    Clear PDF
+                  </button>
+                )}
+              </div>
 
               {/* Quick fill demo */}
               <div style={{ display: "flex", gap: 8 }}>
@@ -217,9 +270,22 @@ export default function Dashboard() {
                 id="start-session-btn"
                 className="btn-primary"
                 onClick={() =>
-                  uploadMutation.mutate({ content_title: uploadTitle, text: uploadText })
+                  pdfFile
+                    ? uploadPdfMutation.mutate({
+                      content_title: uploadTitle,
+                      file: pdfFile,
+                    })
+                  : uploadMutation.mutate({
+                      content_title: uploadTitle,
+                      text: uploadText,
+                    })
                 }
-                disabled={!uploadText.trim() || !uploadTitle.trim() || uploadMutation.isPending}
+                disabled={
+                  !uploadTitle.trim() ||
+                  (!pdfFile && !uploadText.trim()) ||
+                  uploadMutation.isPending ||
+                  uploadPdfMutation.isPending
+                }
                 style={{ display: "flex", alignItems: "center", gap: 8, alignSelf: "flex-start" }}
               >
                 {uploadMutation.isPending ? (
