@@ -135,6 +135,43 @@ export const api = {
     return request<LearningSession>("/api/sessions", { method: "POST", body: JSON.stringify(data) }, token);
   },
 
+
+  uploadPdf: async (
+    token: string,
+    file: File,
+    title: string
+  ): Promise<LearningSession> => {
+    const formData = new FormData();
+
+    formData.append("file", file);
+    formData.append("content_title", title);
+
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(
+      `${BASE_URL}/api/sessions/upload-pdf`,
+      {
+        method: "POST",
+        headers,
+        body: formData,
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({
+        detail: res.statusText,
+      }));
+
+      throw new Error(err.detail || "PDF Upload Failed");
+    }
+
+    return res.json();
+  },
+
   getSessions: async (token: string): Promise<LearningSession[]> => {
     if (DEMO_MODE) {
       await delay(400);
