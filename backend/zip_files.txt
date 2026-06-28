@@ -1,0 +1,14 @@
+neurolearn-dashboard/src/app/assessment/page.tsx
+neurolearn-dashboard/src/app/auth/login/page.tsx
+neurolearn-dashboard/src/app/auth/register/page.tsx
+neurolearn-dashboard/src/app/dashboard/focus/page.tsx
+neurolearn-dashboard/src/app/dashboard/methodology/page.tsx
+neurolearn-dashboard/src/app/dashboard/page.tsx
+neurolearn-dashboard/src/app/dashboard/profile/page.tsx
+neurolearn-dashboard/src/app/dashboard/progress/page.tsx
+neurolearn-dashboard/src/app/dashboard/settings/page.tsx
+neurolearn-dashboard/src/app/dashboard/simplifier/page.tsx
+neurolearn-dashboard/src/app/dashboard/support/page.tsx
+neurolearn-dashboard/src/app/focus/page.tsx
+neurolearn-dashboard/src/app/page.tsx
+neurolearn-dashboard/src/app/test/page.tsx
