@@ -42,7 +42,7 @@ export default function AssessmentWizard() {
       font_size: 16,
       line_spacing: 1.8,
       word_spacing: 0.0,
-      color_theme: "dark" as "default" | "dark" | "sepia" | "high_contrast",
+      color_theme: "default" as "default" | "dark" | "sepia" | "high_contrast",
       dyslexia_font: false,
       high_contrast: false,
       reduce_motion: false,
