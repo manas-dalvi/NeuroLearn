@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    throw new Error("Google Sign-In is not supported by custom FastAPI backend. Please use email registration.");
+    // Unsupported
   };
 
   const logout = async () => {
