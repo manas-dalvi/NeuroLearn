@@ -63,9 +63,15 @@ async function request<T>(
     ...options,
     headers,
   });
+  console.log("================================");
+  console.log("API:", path);
+  console.log("STATUS:", res.status);
+  console.log("OK:", res.ok);
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(parseErrorDetail(err));
+    const text = await res.text();
+    console.log("ERROR BODY:", text);
+    throw new Error(text);
   }
   return res.json();
 }
