@@ -5,7 +5,7 @@ import logging
 import json
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -749,7 +749,8 @@ def chunk_original_text_into_n(text: str, n: int) -> List[str]:
 async def create_session(
     payload: CreateSessionPayload,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    background_tasks: BackgroundTasks
 ):
     # Get user profile or fallback defaults
     result = await db.execute(select(Profile).where(Profile.user_id == current_user.id))
@@ -882,7 +883,7 @@ async def create_session(
             }
             for i in range(len(simplified_chunks))
         ]
-        await asyncio.to_thread(rag_service.add_document, session_id, chunks_to_index)
+        background_tasks.add_task(rag_service.add_document,session_id,chunks_to_index)
     except Exception as e:
         logger.error(f"Failed to index document in RAG vector database: {e}", exc_info=True)
     
@@ -990,7 +991,8 @@ async def upload_content(
     title: str = Form(...),
     profile_type: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    background_tasks: BackgroundTasks
 ):
     # Extract text from PDF/TXT using processing service
     extracted_text = await FileProcessingService.extract_text(file)
@@ -1144,7 +1146,7 @@ async def upload_content(
             }
             for i in range(len(simplified_chunks))
         ]
-        await asyncio.to_thread(rag_service.add_document, session_id, chunks_to_index)
+        background_tasks.add_task(rag_service.add_document,session_id,chunks_to_index)
     except Exception as e:
         logger.error(f"Failed to index document in RAG vector database: {e}", exc_info=True)
     response_data = {"session_id": session_id, "chunk_count": len(simplified_chunks)}
