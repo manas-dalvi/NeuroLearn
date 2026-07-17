@@ -748,9 +748,9 @@ def chunk_original_text_into_n(text: str, n: int) -> List[str]:
 @router.post("/sessions", response_model=LearningSessionSchema, status_code=status.HTTP_201_CREATED)
 async def create_session(
     payload: CreateSessionPayload,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    background_tasks: BackgroundTasks
 ):
     # Get user profile or fallback defaults
     result = await db.execute(select(Profile).where(Profile.user_id == current_user.id))
@@ -987,12 +987,12 @@ async def update_session(
 
 @router.post("/content/upload", response_model=UploadContentResponse)
 async def upload_content(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     title: str = Form(...),
     profile_type: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    background_tasks: BackgroundTasks
 ):
     # Extract text from PDF/TXT using processing service
     extracted_text = await FileProcessingService.extract_text(file)
