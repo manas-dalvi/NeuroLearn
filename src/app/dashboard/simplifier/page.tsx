@@ -391,7 +391,13 @@ export default function SimplifierPage() {
         formData.append("file", selectedFileObj);
         formData.append("title", uploadedFile || "Uploaded Document");
         formData.append("profile_type", activeProfile);
+        console.log("========== DEBUG ==========");
+        console.log("TOKEN:", token);
+        console.log("FILE:", selectedFileObj);
+        console.log("PROFILE:", activeProfile);
         const uploadRes = await api.uploadContent(token, formData);
+
+        console.log("UPLOAD RESPONSE:", uploadRes);
         
         // Fetch session chunks
         const chunksRes = await api.getChunks(token, uploadRes.session_id);
