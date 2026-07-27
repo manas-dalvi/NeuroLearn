@@ -401,11 +401,24 @@ class QuizService:
 
         user_prompt = f"Document context:\n{context_text}\n\nGenerate Quiz JSON:"
 
-        logger.info(f"RAG_SERVICE: context sent to LLM: {context_text}")
+        logger.info("RAG context prepared.")
+        logger.info("Context length: %d characters", len(context_text))
+        logger.info("Prompt length: %d characters", len(user_prompt))
 
         # 6. Call LLM
-        raw_output = await self._call_llm_json(system_prompt, user_prompt)
-        logger.info("RAW QUIZ RESPONSE:\n%s", raw_output)
+        logger.info("===== QUIZ GENERATION START =====")
+        logger.info("Calling Groq LLM...")
+
+        try:
+            raw_output = await self._call_llm_json(system_prompt, user_prompt)
+            logger.info("Groq LLM completed successfully.")
+        except Exception:
+            logger.exception("Quiz LLM generation failed.")
+            raise
+        logger.info(
+            "Received response from Groq (%d characters).",
+            len(raw_output) if raw_output else 0
+        )
         # 7. Parse and save
         if raw_output:
             try:
