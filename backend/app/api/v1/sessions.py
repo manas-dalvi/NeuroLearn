@@ -1336,22 +1336,28 @@ async def generate_quiz(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Verify session ownership
-    sess_result = await db.execute(
-        select(LearningSession).where(
-            LearningSession.id == payload.session_id,
-            LearningSession.user_id == current_user.id
-        )
-    )
-    if not sess_result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Learning session not found or access denied."
+    try:
+        # Verify session ownership
+        sess_result = await db.execute(
+            select(LearningSession).where(
+                LearningSession.id == payload.session_id,
+                LearningSession.user_id == current_user.id
+            )
         )
 
-    from app.services.quiz_service import QuizService
-    service = QuizService()
-    return await service.generate_quiz(db, current_user.id, payload)
+        if not sess_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Learning session not found or access denied."
+            )
+
+        from app.services.quiz_service import QuizService
+        service = QuizService()
+        return await service.generate_quiz(db, current_user.id, payload)
+
+    except Exception:
+        logger.exception("DEBUG: Exception in generate_quiz endpoint route handler")
+        raise
 
 
 @router.post("/quiz/submit", response_model=QuizSubmissionResponse)
